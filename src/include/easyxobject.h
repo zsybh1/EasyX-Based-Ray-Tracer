@@ -63,7 +63,7 @@ public:
 	virtual vec3 normal(const pos &p)const = 0;
 };
 
-class sphere : virtual public surface{
+class sphere : public surface{
 public:
 	pos c;
 	float r;
@@ -72,7 +72,7 @@ public:
 	vec3 normal(const pos &p) const override;
 };
 
-class triangle : virtual public surface{
+class triangle : public surface{
 public:
 	pos A;
 	pos B;
@@ -82,7 +82,7 @@ public:
 	vec3 normal(const pos &p)const override;
 };
 
-class colored_surface : virtual public surface {
+class colored_surface{
 public:
 	color rgb;
 	colored_surface(const color &Color = color(0xFFFFFFul)):rgb(Color){}
@@ -91,23 +91,11 @@ public:
 class colored_sphere : public sphere, public colored_surface{
 public:
 	colored_sphere(const pos &center, float radius, const color &Color = color(0xFFFFFFul)) : colored_surface(Color), sphere(center, radius){}
-	bool intersect_ray(const ray &line, float &t) const override {
-		return sphere::intersect_ray(line, t);
-	}
-	vec3 normal(const pos &p) const override {
-		return sphere::normal(p);
-	}
 };
 
 class colored_triangle : public triangle, public colored_surface{
 public:
 	colored_triangle(const pos &a, const pos &b, const pos &c, const color &Color = color(0xFFFFFFul)): colored_surface(Color), triangle(a, b, c){}
-	bool intersect_ray(const ray &r, float &t) const override {
-		return triangle::intersect_ray(r, t);
-	}
-	vec3 normal(const pos &p)const override {
-		return triangle::normal(p);
-	}
 };
 
 
