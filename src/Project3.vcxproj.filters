@@ -20,10 +20,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\easyxmath.h">
+    <ClInclude Include="..\include\easyxmath.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\easyxobject.h">
+    <ClInclude Include="..\include\easyxobject.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

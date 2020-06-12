@@ -1,5 +1,5 @@
 #pragma once
-#include "easyxobject.h"
+#include <easyxmath.h>
 
 class color {
 public:
