@@ -98,6 +98,14 @@ public:
 	colored_triangle(const pos &a, const pos &b, const pos &c, const color &Color = color(0xFFFFFFul)): colored_surface(Color), triangle(a, b, c){}
 };
 
+class tricolor_triangle : public triangle {
+public:
+	color Acolor;
+	color Bcolor;
+	color Ccolor;
+	tricolor_triangle(const pos &a, const pos &b, const pos &c, const color &ca, const color &cb, const color &cc)
+		:triangle(a, b, c), Acolor(ca), Bcolor(cb), Ccolor(cc){}
+};
 
 
 bool sphere::intersect_ray(const ray &line, float &t) const{

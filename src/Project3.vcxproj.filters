@@ -23,7 +23,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ProjectionRenderer.cpp">
+    <ClCompile Include="Rasterization.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
