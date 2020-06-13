@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\include\easyxmath.h" />
     <ClInclude Include="..\include\easyxobject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ProjectionRenderer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
