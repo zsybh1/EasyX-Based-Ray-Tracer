@@ -3,14 +3,11 @@
 
 class color {
 public:
-	int R;
-	int G;
-	int B;
-	color(int r, int g, int b) {
-		R = r; G = g; B = b;
-	}
+	float R;
+	float G;
+	float B;
 	color(float r, float g, float b) {
-		R = (int)r; G = (int)g; B = (int)b;
+		R = r; G = g; B = b;
 	}
 	color(unsigned long RGB = 0) {
 		B = RGB % 0x100;
@@ -20,19 +17,19 @@ public:
 		R = RGB % 0x100;
 	}
 	unsigned long getRGB() const {
-		return R * 0x10000 + G * 0x100 + B;
+		return (int)R * 0x10000 + (int)G * 0x100 + (int)B;
 	}
 	unsigned long getBGR() const {
-		return B * 0x10000 + G * 0x100 + R;
+		return (int)B * 0x10000 + (int)G * 0x100 + (int)R;
 	}
 	color operator*(const vec3 &vec) const {
-		return color((int)(R * vec.x), (int)(G * vec.y), (int)(B * vec.z));
+		return color(R * vec.x, G * vec.y, B * vec.z);
 	}
 	friend color operator*(const vec3 &vec, const color &Color) {
 		return Color * vec;
 	}
 	color operator*(float coef) const {
-		return color((int)(R * coef), (int)(G * coef), (int)(B * coef));
+		return color(R * coef, G * coef, B * coef);
 	}
 	friend color operator*(float coef, const color &Color) {
 		return Color * coef;

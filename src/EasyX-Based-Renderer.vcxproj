@@ -23,7 +23,7 @@
     <ClInclude Include="..\include\easyxobject.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Rasterization.cpp" />
+    <ClCompile Include="RayTracer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
