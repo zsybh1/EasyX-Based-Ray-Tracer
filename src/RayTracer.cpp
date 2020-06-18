@@ -1,20 +1,53 @@
-#include <graphics.h>			// 引用图形库头文件
+#include <graphics.h>			
 #include <iostream>
 #include <cmath>
 #include <easyxmath.h>
 #include <easyxobject.h>
 #include <typeinfo>
+#include <thread>
 using namespace std;
 
-color RayTrace(const ray &l, surface *objectList[], unsigned int objectNum, pos lightList[], unsigned int lightNum, const color &lightColor);
+class scene {
+public:
+	float dist;
+	pos e;
+	vec3 v;
+	vec3 u;
+	vec3 w;
+	unsigned int lightNum;
+	pos *lightList;
+	unsigned int objectNum;
+	surface **objectList;
+	int HEIGHT, WIDTH;
+};
+
+scene init();
+void render(const scene &s, int linein, int lineout);
+color RayTrace(const scene &s, const ray &l, const color &lightColor);
+
+
 int main() {
+	const scene &Scene = init();
 
-	//===========================
-	//== 初始化
-	//===========================
+	//四线程绘图
+	thread thread1(render, Scene, Scene.HEIGHT / 2, Scene.HEIGHT / 4);
+	thread thread2(render, Scene, Scene.HEIGHT / 4, 0);
+	thread thread3(render, Scene, 0, -Scene.HEIGHT / 4);
+	render(Scene, -Scene.HEIGHT / 4, -Scene.HEIGHT / 2);
+	thread1.join();
+	thread2.join();
+	thread3.join();
 
+	saveimage(L"test.png");
+	getchar();
+	closegraph();
+}
+
+
+scene init() {
 	// 窗口设定
-	const int HEIGHT = 480 * 2, WIDTH = 640 * 2;
+	int HEIGHT = 480 * 2;
+	int WIDTH = 640 * 2;
 	initgraph(WIDTH, HEIGHT, EW_SHOWCONSOLE);
 	setorigin(WIDTH / 2, HEIGHT / 2);
 	setaspectratio(1, -1);
@@ -25,47 +58,46 @@ int main() {
 	vec3 v(0.0, 1.0, 0.0);
 	vec3 u(1.0, 0.0, 0.0);
 	vec3 w(0.0, 0.0, -1.0);
-    
+
 	//灯光设定
 	unsigned int lightNum = 1;
-//	pos light1(-200.0, 400.0, 50.0);
+	//	pos light1(-200.0, 400.0, 50.0);
 	pos light2(-200.0, 0.0, 0.0);
-	pos lightList[] = { light2 };
+	pos* lightList = new pos[lightNum];
+	lightList[0] = pos(-200.0, 0.0, 0.0);
 
 	// 物体设定
-	unsigned int objectNum = 3;
+	unsigned objectNum = 3;
 	colored_sphere s1(pos(-200.0, 200.0, 200.0), 200.0, color(BGR(RED)));
 	colored_sphere s2(pos(100.0, 100.0, 100.0), 100.0, color(255, 128, 64));
 	colored_sphere s3(pos(0.0, -250.0, 200.0), 200.0, color(WHITE));
 	//colored_triangle t1(pos(-1000.0, -HEIGHT / 2, 0.0), pos(1000.0, -HEIGHT / 2, 0.00), pos(4000.0, -HEIGHT / 2, 4000.0), color(BGR(WHITE)));
 	//colored_triangle t2(pos(-1000.0, -HEIGHT / 2, 0.0), pos(-4000.0, -HEIGHT / 2, 4000.00), pos(4000.0, -HEIGHT / 2, 4000.0), color(BGR(WHITE)));
-	surface *objectList[] = { &s1, &s2, &s3};
-	
-	//============================
-	//== 遍历像素进行渲染
-	//============================
-	
-	for (int j = HEIGHT / 2; j > -HEIGHT / 2; --j) {
-		for (int i = -WIDTH / 2; i < WIDTH / 2; ++i) {
-			// 生成光线
-			vec3 d = -dist * w + (float)i * u + (float)j * v;
-			ray l(e, d);
+	surface** objectList = new surface* [objectNum];
+	objectList[0] = new colored_sphere(s1);
+	objectList[1] = new colored_sphere(s2);
+	objectList[2] = new colored_sphere(s3);
 
-			putpixel(i, j, RayTrace(l, objectList, objectNum, lightList, lightNum, color(0xFFFFFF)).getBGR());
-		}
-	}
-	saveimage(L"test.png");
-	getchar();
-	
-	//==============================
-	//== 善后
-	//==============================
-
-	closegraph();
-	return 0;
+	return scene{ dist,e,v,u,w,lightNum,lightList,objectNum,objectList, HEIGHT, WIDTH };
 }
 
-color RayTrace(const ray &l, surface *objectList[], unsigned int objectNum, pos lightList[], unsigned int lightNum, const color &lightColor) {
+void render(const scene &s, int linein, int lineout) {
+	for (int j = linein; j > lineout; --j) {
+		for (int i = -s.WIDTH / 2; i < s.WIDTH / 2; ++i) {
+			// 生成光线
+			vec3 d = -s.dist * s.w + (float)i * s.u + (float)j * s.v;
+			ray l(s.e, d);
+
+			putpixel(i, j, RayTrace(s, l, color(0xFFFFFF)).getBGR());
+		}
+	}
+}
+
+color RayTrace(const scene &s, const ray &l, const color &lightColor) {
+	unsigned int objectNum = s.objectNum;
+	surface **objectList = s.objectList;
+	unsigned int lightNum = s.lightNum;
+	pos *lightList = s.lightList;
 	color ret;
 	// 初始化深度值
 	float t0 = 10000.0;
@@ -102,10 +134,10 @@ color RayTrace(const ray &l, surface *objectList[], unsigned int objectNum, pos 
 					}
 					if (flag) {
 						result += (0.5f * max(0.0f, dot(n, lightDir)) * ob.rgb + 1.0f * pow(max(0.0f, dot(n, halfDir)), power) * ob.rgb)
-							*vec3(lightColor.R/0x100, lightColor.G/0x100, lightColor.B/0x100);
+							* vec3(lightColor.R / 0x100, lightColor.G / 0x100, lightColor.B / 0x100);
 						vec3 reflectDir = 2 * n - viewDir * sqrt(2.0f);
-						if (result.R>0.1 || result.G>0.1|| result.B>0.1)
-							result +=  0.5*RayTrace(ray(p, reflectDir), objectList, objectNum, lightList, lightNum, result);
+						if (result.R > 0.1 || result.G > 0.1 || result.B > 0.1)
+							result += 0.5 * RayTrace(s, ray(p, reflectDir), result);
 					}
 				}
 
