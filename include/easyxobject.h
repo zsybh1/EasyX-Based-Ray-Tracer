@@ -17,10 +17,10 @@ public:
 		R = RGB % 0x100;
 	}
 	unsigned long getRGB() const {
-		return (int)R * 0x10000 + (int)G * 0x100 + (int)B;
+		return max(min((int)R, 0xFF), 0) * 0x10000 + max(min((int)G, 0xFF), 0) * 0x100 + max(min((int)B, 0xFF), 0);
 	}
 	unsigned long getBGR() const {
-		return (int)B * 0x10000 + (int)G * 0x100 + (int)R;
+		return max(min((int)B, 0xFF), 0) * 0x10000 + max(min((int)G, 0xFF), 0) * 0x100 + max(min((int)R, 0xFF), 0);
 	}
 	color operator*(const vec3 &vec) const {
 		return color(R * vec.x, G * vec.y, B * vec.z);
@@ -38,9 +38,9 @@ public:
 		return color(min(Color.R + R, 0xFF), min(Color.G + G, 0xFF), min(Color.B + B, 0xFF));
 	}
 	color &operator+=(const color &Color) {
-		R = min(R + Color.R, 0xFF);
-		G = min(G + Color.G, 0xFF);
-		B = min(B + Color.B, 0xFF);
+		R += Color.R;
+		G += Color.G;
+		B += Color.B;
 		return *this;
 	}
 };
