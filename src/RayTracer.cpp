@@ -4,6 +4,7 @@
 #include <easyxmath.h>
 #include <easyxobject.h>
 #include <typeinfo>
+#include <vector>
 #include <thread>
 using namespace std;
 
@@ -24,7 +25,7 @@ public:
 scene init();
 void render(const scene &s, int linein, int lineout);
 color RayTrace(const scene &s, const ray &l, const color &lightColor, int layer);
-
+int limits = 10;
 
 int main() {
 	const scene &Scene = init();
@@ -46,15 +47,15 @@ int main() {
 
 scene init() {
 	// 窗口设定
-	int HEIGHT = 480 * 4;
-	int WIDTH = 640 * 4;
+	int HEIGHT = 480  ;
+	int WIDTH = 800 ;
 	initgraph(WIDTH, HEIGHT, EW_SHOWCONSOLE);
 	setorigin(WIDTH / 2, HEIGHT / 2);
 	setaspectratio(1, -1);
 
 	// 视点设定
 	float dist = HEIGHT * 2.0f;
-	pos e(0.0, 0.0, -dist / 2);
+	pos e(0.0, 0.0, -dist );
 	vec3 v(0.0, 1.0, 0.0);
 	vec3 u(1.0, 0.0, 0.0);
 	vec3 w(0.0, 0.0, -1.0);
@@ -106,6 +107,7 @@ scene init() {
 	objectList[12] = new colored_triangle(t10);
 	objectList[13] = new colored_triangle(t11);
 	objectList[14] = new colored_triangle(t12);
+	vector<surface> a;
 
 	return scene{ dist,e,v,u,w,lightNum,lightList,objectNum,objectList, HEIGHT, WIDTH };
 }
@@ -117,13 +119,13 @@ void render(const scene &s, int linein, int lineout) {
 			vec3 d = -s.dist * s.w + (float)i * s.u + (float)j * s.v;
 			ray l(s.e, d);
 
-			putpixel(i, j, RayTrace(s, l, color(0xFFFFFF), 0).getBGR());
+			putpixel(i + s.WIDTH / 2, j + s.HEIGHT / 2, RayTrace(s, l, color(0xFFFFFF), 0).getBGR());
 		}
 	}
 }
 
 color RayTrace(const scene &s, const ray &l, const color &lightColor, int layer) {
-	if (layer > 5)return lightColor;
+	if (layer >= limits)return lightColor;
 	unsigned int objectNum = s.objectNum;
 	surface **objectList = s.objectList;
 	unsigned int lightNum = s.lightNum;
@@ -145,7 +147,7 @@ color RayTrace(const scene &s, const ray &l, const color &lightColor, int layer)
 	if (hitObject != nullptr && (typeid(*hitObject) == typeid(colored_sphere) || typeid(*hitObject) == typeid(colored_triangle))) {
 		colored_surface &ob = *dynamic_cast<colored_surface *>(hitObject);
 		color result;
-		pos p = l.e + t0 * 0.99  * l.d;
+		pos p = l.e + t0 * 0.9999  * l.d;
 		vec3 n = hitObject->normal(p);
 		vec3 viewDir = (-l.d).normalize();
 		// 环境光
