@@ -54,7 +54,7 @@ public:
         return pos4(this->xyz() - p, w);
     }
     vec3 operator-(const pos4 &a) const {
-        return vec3(x / w - a.x / a.w, y / w - a.y / a.w, z / w - a.z / a.w);
+        return this->xyz() - a.xyz();
     }
     pos3 xyz() const {
         return pos3(x / w, y / w, z / w);
@@ -66,12 +66,17 @@ private:
     float *m_data;
 public:
     mat4(float init = 1.0f) :m_data(new float[16]) {
-        for (int i = 0; i < 4; ++i) {
-            m_data[5 * i] = init;
+        for (int i = 0; i < 16; ++i) {
+            if (i % 5 == 0) {
+                m_data[i] = init;
+            }
+            else {
+                m_data[i] = 0.0f;
+            }
         }
     }
     mat4(const mat4 &M) : m_data(new float[16]) {
-        for (int i = 0; i < 15; ++i) {
+        for (int i = 0; i < 16; ++i) {
             m_data[i] = M.m_data[i];
         }
     }
@@ -80,7 +85,7 @@ public:
     }
 
     mat4 &operator=(const mat4 &M) {
-        for (int i = 0; i < 15; ++i) {
+        for (int i = 0; i < 16; ++i) {
             m_data[i] = M.m_data[i];
         }
         return *this;
@@ -94,23 +99,22 @@ public:
         return &m_data[4 * i];
     }
     mat4 operator*(const mat4 &N) const {
-        const mat4 &M = *this;
         mat4 P(0.0f);
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
                 for (int k = 0; k < 4; ++k) {
-                    P[i][j] += M[i][k] * N[k][j];
+                    P[i][j] += (*this)[i][k] * N[k][j];
                 }
             }
         }
         return P;
     }
     pos4 operator*(const pos4 &N) const {
-        const mat4 M = *this;
         float res[4] = { 0.0f };
         for (int i = 0; i < 4; ++i) {
-            res[i] = M[i][0] * N.x + M[i][1] * N.y + M[i][2] * N.z + M[i][3] * N.w;
+            res[i] = (*this)[i][0] * N.x + (*this)[i][1] * N.y + (*this)[i][2] * N.z + (*this)[i][3] * N.w;
         } 
+        return pos4(res[0], res[1], res[2], res[3]);
     }
     ~mat4() {
         delete[] m_data;
@@ -161,14 +165,14 @@ mat4 rotate_mat4(float rad, const vec3 &p) {
     return M;
 }
 
-//rad是上下的视野角度，rate是屏幕宽高比，near是近裁剪平面，far是远裁剪平面
-mat4 perspective_mat4(float rad, float rate, float near, float far) {
+//rad是上下的视野角度，rate是屏幕宽高比，n是近裁剪平面，f是远裁剪平面
+mat4 perspective_mat4(float rad, float rate, float n, float f) {
     float t = 1 / tan(rad / 2);
     mat4 M(0.0f);
     M[0][0] = t / rate;
     M[1][1] = t;
-    M[2][2] = (far + near) / (near - far);
-    M[2][3] = 2 * far * near / (far - near);
+    M[2][2] = (f + n) / (n - f);
+    M[2][3] = 2 * f * n / (f - n);
     M[3][2] = 1;
 
     return M;

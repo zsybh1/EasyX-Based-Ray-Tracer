@@ -1,12 +1,16 @@
 #include <graphics.h>			// 引用图形库头文件
 #include <iostream>
-#include <cmath>
+#include <vector>
 #include <easyxmath.h>
 #include <easyxobject.h>
-#include <typeinfo>
+#include <windows.h>
 using namespace std;
 
-void draw_tricolor_triangle(const tricolor_triangle &tri, const pos3 &e);
+const int HEIGHT = 480 * 2, WIDTH = 640 * 2;
+
+void draw_triangle_line(const triangle &T, const mat4 &M);
+void draw_tricolor_triangle(const tricolor_triangle &T, const mat4 &M);
+
 
 int main() {
 
@@ -15,29 +19,31 @@ int main() {
 	//===========================
 
 	// 窗口设定
-	const int HEIGHT = 480 * 2, WIDTH = 640 * 2;
 	initgraph(WIDTH, HEIGHT, EW_SHOWCONSOLE);
 	setorigin(WIDTH / 2, HEIGHT / 2);
 	setaspectratio(1, -1);
 
-	// 视点设定
-	float dist = 3.0f;
-	pos3 e(0.0, 0.0, -dist);
-    
 	// 物体设定
-	unsigned int objectNum = 1;
-	tricolor_triangle t1(pos3(-1.0, -1.0, 1.0), pos3(2.5, -2.0, 1.0), pos3(2.0, 2.0, 1.0), BGR(RED), BGR(GREEN), BGR(BLUE));
-	tricolor_triangle *objectList[] = {&t1};
-	
+	vector<tricolor_triangle> objectList;
+	objectList.emplace_back(pos3(0.0, 0.0, 9.0), pos3(2.0, 2.0, 3.0), pos3(0.0, 2.0, 3.0), BGR(RED), BGR(GREEN), BGR(YELLOW));
+
+	mat4 Mper = perspective_mat4(radians(90.0f), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+	mat4 Mview = scale_mat4(vec3(WIDTH / 2, HEIGHT / 2, 1.0f));
+
+	float ror = 0.0f;
 	//============================
 	//== 遍历物体进行渲染
 	//============================
-	for (unsigned k = 0; k < objectNum; ++k) {
-		draw_tricolor_triangle(*objectList[k], e);
+	while (1) {
+		ror += 1.0f;
+		mat4 Mrot = rotate_mat4(radians(ror), vec3(0.0f, 0.0f, 1.0f));
+		
+		draw_tricolor_triangle(objectList[0], Mview * Mper * Mrot);
+		Sleep(20);
 	}
 	saveimage(L"test.png");
 	getchar();
-	
+
 	//==============================
 	//== 善后
 	//==============================
@@ -46,35 +52,37 @@ int main() {
 	return 0;
 }
 
-void draw_tricolor_triangle(const tricolor_triangle &tri, const pos3 &e) {
-	const pos3 *r[3] = { &tri.A,&tri.B,&tri.C };
-	pos3 p[3];
-	for (int j = 0; j < 3; ++j) {
-		//映射顶点到视窗
-		float t = -r[j]->z / e.z;
-		float x = e.x + t * r[j]->x;
-		float y = e.y + t * r[j]->y;
-		//将视窗映射到窗口像素
-		p[j].x = int(x * 500);
-		p[j].y = int(y * 500);
-	}
-	//计算包围三角形的最小轴对齐矩形
-	int maxX = max(max(p[0].x, p[1].x), p[2].x);
-	int maxY = max(max(p[0].y, p[1].y), p[2].y);
-	int minX = min(min(p[0].x, p[1].x), p[2].x);
-	int minY = min(min(p[0].y, p[1].y), p[2].y);
+void draw_triangle_line(const triangle &T, const mat4 &M) {
+	pos3 A = (M * pos4(T.A, 1.0f)).xyz();
+	pos3 B = (M * pos4(T.B, 1.0f)).xyz();
+	pos3 C = (M * pos4(T.C, 1.0f)).xyz();
+	line(A.x, A.y, B.x, B.y);
+	line(B.x, B.y, C.x, C.y);
+	line(C.x, C.y, A.x, A.y);
+}
 
-	vec3 vec[3] = { vec3(),p[1] - p[0], p[2] - p[0] };
+void draw_tricolor_triangle(const tricolor_triangle &T, const mat4 &M) {
+	pos3 A = (M * pos4(T.A, 1.0f)).xyz();
+	pos3 B = (M * pos4(T.B, 1.0f)).xyz();
+	pos3 C = (M * pos4(T.C, 1.0f)).xyz();
+
+	//计算包围三角形的最小轴对齐矩形
+	int maxX = max(max(A.x, B.x), C.x);
+	int maxY = max(max(A.y, B.y), C.y);
+	int minX = min(min(A.x, B.x), C.x);
+	int minY = min(min(A.y, B.y), C.y);
+
+	vec3 vec[3] = { vec3(),B - A, C - A };
+	float N = vec[1].x * vec[2].y - vec[2].x * vec[1].y;
 	for (int i = maxY; i >= minY; --i) {
 		for (int j = minX; j <= maxX; ++j) {
 			//遍历每个像素，计算像素是否在三角形内
-			vec[0] = pos3(j, i, 0) - p[0];
-			float M = vec[1].x * vec[2].y - vec[2].x * vec[1].y;
-			float v = (vec[1].x * vec[0].y - vec[0].x * vec[1].y) / M;
-			float u = -(vec[2].x * vec[0].y - vec[0].x * vec[2].y) / M;
-			if (0 <= u  && 0 <= v && u+v <= 1) {
+			vec[0] = pos3(j, i, 0) - A;
+			float v = (vec[1].x * vec[0].y - vec[0].x * vec[1].y) / N;
+			float u = (vec[0].x * vec[2].y - vec[0].y * vec[2].x) / N;
+			if (0 <= u && 0 <= v && u + v <= 1) {
 				//如果在，则插值上色
-				color Color = tri.Acolor * (1 - u - v) + tri.Bcolor * u + tri.Ccolor * v;
+				color Color = T.Acolor * (1 - u - v) + T.Bcolor * u + T.Ccolor * v;
 				putpixel(j, i, Color.getBGR());
 			}
 		}
