@@ -47,9 +47,9 @@ public:
 
 class ray {
 public:
-	pos e;
+	pos3 e;
 	vec3 d;
-	ray(const pos &point, const vec3 &dir) {
+	ray(const pos3 &point, const vec3 &dir) {
 		e = point; d = dir;
 	}
 };
@@ -57,26 +57,26 @@ public:
 class surface {
 public:
 	virtual bool intersect_ray(const ray &line, float &t)const = 0;
-	virtual vec3 normal(const pos &p)const = 0;
+	virtual vec3 normal(const pos3 &p)const = 0;
 };
 
 class sphere : public surface{
 public:
-	pos c;
+	pos3 c;
 	float r;
-	sphere(const pos &center, float radius) : c(center), r(radius) {}
+	sphere(const pos3 &center, float radius) : c(center), r(radius) {}
 	bool intersect_ray(const ray &line, float &t) const override;
-	vec3 normal(const pos &p) const override;
+	vec3 normal(const pos3 &p) const override;
 };
 
 class triangle : public surface{
 public:
-	pos A;
-	pos B;
-	pos C;
-	triangle(const pos &a, const pos &b, const pos &c):A(a), B(b), C(c) {}
+	pos3 A;
+	pos3 B;
+	pos3 C;
+	triangle(const pos3 &a, const pos3 &b, const pos3 &c):A(a), B(b), C(c) {}
 	bool intersect_ray(const ray &r, float &t) const override;
-	vec3 normal(const pos &p)const override;
+	vec3 normal(const pos3 &p)const override;
 };
 
 class colored_surface{
@@ -87,12 +87,12 @@ public:
 
 class colored_sphere : public sphere, public colored_surface{
 public:
-	colored_sphere(const pos &center, float radius, const color &Color = color(0xFFFFFFul)) : colored_surface(Color), sphere(center, radius){}
+	colored_sphere(const pos3 &center, float radius, const color &Color = color(0xFFFFFFul)) : colored_surface(Color), sphere(center, radius){}
 };
 
 class colored_triangle : public triangle, public colored_surface{
 public:
-	colored_triangle(const pos &a, const pos &b, const pos &c, const color &Color = color(0xFFFFFFul)): colored_surface(Color), triangle(a, b, c){}
+	colored_triangle(const pos3 &a, const pos3 &b, const pos3 &c, const color &Color = color(0xFFFFFFul)): colored_surface(Color), triangle(a, b, c){}
 };
 
 class tricolor_triangle : public triangle {
@@ -100,7 +100,7 @@ public:
 	color Acolor;
 	color Bcolor;
 	color Ccolor;
-	tricolor_triangle(const pos &a, const pos &b, const pos &c, const color &ca, const color &cb, const color &cc)
+	tricolor_triangle(const pos3 &a, const pos3 &b, const pos3 &c, const color &ca, const color &cb, const color &cc)
 		:triangle(a, b, c), Acolor(ca), Bcolor(cb), Ccolor(cc){}
 };
 
@@ -118,7 +118,7 @@ bool sphere::intersect_ray(const ray &line, float &t) const{
 	return false;
 }
 
-inline vec3 sphere::normal(const pos &p) const {
+inline vec3 sphere::normal(const pos3 &p) const {
 	return (p - c).normalize();
 }
 
@@ -152,7 +152,7 @@ bool triangle::intersect_ray(const ray &r, float &t) const{
 	return true;
 }
 
-inline vec3 triangle::normal(const pos &p)const {
+inline vec3 triangle::normal(const pos3 &p)const {
 	vec3 Cross = cross(B - A, C - A).normalize();
 	vec3 test = p - A;
 	if (dot(Cross, test) > 0) {

@@ -6,7 +6,7 @@
 #include <typeinfo>
 using namespace std;
 
-void draw_tricolor_triangle(const tricolor_triangle &tri, const pos &e);
+void draw_tricolor_triangle(const tricolor_triangle &tri, const pos3 &e);
 
 int main() {
 
@@ -22,11 +22,11 @@ int main() {
 
 	// 视点设定
 	float dist = 3.0f;
-	pos e(0.0, 0.0, -dist);
+	pos3 e(0.0, 0.0, -dist);
     
 	// 物体设定
 	unsigned int objectNum = 1;
-	tricolor_triangle t1(pos(-1.0, -1.0, 1.0), pos(2.5, -2.0, 1.0), pos(2.0, 2.0, 1.0), BGR(RED), BGR(GREEN), BGR(BLUE));
+	tricolor_triangle t1(pos3(-1.0, -1.0, 1.0), pos3(2.5, -2.0, 1.0), pos3(2.0, 2.0, 1.0), BGR(RED), BGR(GREEN), BGR(BLUE));
 	tricolor_triangle *objectList[] = {&t1};
 	
 	//============================
@@ -46,9 +46,9 @@ int main() {
 	return 0;
 }
 
-void draw_tricolor_triangle(const tricolor_triangle &tri, const pos &e) {
-	const pos *r[3] = { &tri.A,&tri.B,&tri.C };
-	pos p[3];
+void draw_tricolor_triangle(const tricolor_triangle &tri, const pos3 &e) {
+	const pos3 *r[3] = { &tri.A,&tri.B,&tri.C };
+	pos3 p[3];
 	for (int j = 0; j < 3; ++j) {
 		//映射顶点到视窗
 		float t = -r[j]->z / e.z;
@@ -68,7 +68,7 @@ void draw_tricolor_triangle(const tricolor_triangle &tri, const pos &e) {
 	for (int i = maxY; i >= minY; --i) {
 		for (int j = minX; j <= maxX; ++j) {
 			//遍历每个像素，计算像素是否在三角形内
-			vec[0] = pos(j, i, 0) - p[0];
+			vec[0] = pos3(j, i, 0) - p[0];
 			float M = vec[1].x * vec[2].y - vec[2].x * vec[1].y;
 			float v = (vec[1].x * vec[0].y - vec[0].x * vec[1].y) / M;
 			float u = -(vec[2].x * vec[0].y - vec[0].x * vec[2].y) / M;

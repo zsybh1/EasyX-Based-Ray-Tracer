@@ -11,12 +11,12 @@ using namespace std;
 class scene {
 public:
 	float dist;
-	pos e;
+	pos3 e;
 	vec3 v;
 	vec3 u;
 	vec3 w;
 	unsigned int lightNum;
-	pos *lightList;
+	pos3 *lightList;
 	unsigned int objectNum;
 	surface **objectList;
 	int HEIGHT, WIDTH;
@@ -55,7 +55,7 @@ scene init() {
 
 	// 视点设定
 	float dist = HEIGHT * 2.0f;
-	pos e(0.0, 0.0, -dist );
+	pos3 e(0.0, 0.0, -dist );
 	vec3 v(0.0, 1.0, 0.0);
 	vec3 u(1.0, 0.0, 0.0);
 	vec3 w(0.0, 0.0, -1.0);
@@ -71,26 +71,26 @@ scene init() {
 	unsigned int lightNum = 1;
 	//	pos light1(-200.0, 400.0, 50.0);
 	//pos light2(-200.0, 0.0, 0.0);
-	pos* lightList = new pos[lightNum];
-	lightList[0] = pos(0.0, up - 300.0f, back / 2);
+	pos3* lightList = new pos3[lightNum];
+	lightList[0] = pos3(0.0, up - 300.0f, back / 2);
 
 	// 物体设定
 	unsigned objectNum = 15;
-	colored_sphere s1(pos(-300.0, 0.0, 200.0), 200.0, color(BGR(RED)));
-	colored_sphere s2(pos(0.0, -100.0, 500.0), 100.0, color(255, 128, 64));
-	colored_sphere s3(pos(300.0, 0.0, 200.0), 200.0, color(BGR(YELLOW)));
-	colored_triangle t1(pos(right, down, back), pos(right, down, front), pos(left, down, front), color(BGR(WHITE)));
-	colored_triangle t2(pos(right, down, back), pos(left, down, back), pos(left, down, front), color(BGR(WHITE)));
-	colored_triangle t3(pos(left, down, front), pos(right, down, front), pos(right, up, front), color(BGR(WHITE)));
-	colored_triangle t4(pos(left, down, front), pos(left, up, front), pos(right, up, front), color(BGR(WHITE)));
-	colored_triangle t5(pos(left, down, back), pos(left, up, back), pos(left, up, front), color(BGR(WHITE)));
-	colored_triangle t6(pos(left, down, back), pos(left, down, front), pos(left, up, front), color(BGR(WHITE)));
-	colored_triangle t7(pos(right, down, back), pos(right, up, back), pos(right, up, front), color(BGR(WHITE)));
-	colored_triangle t8(pos(right, down, back), pos(right, down, front), pos(right, up, front), color(BGR(WHITE)));
-	colored_triangle t9(pos(left, down, back), pos(right, down, back), pos(right, up, back), color(BGR(WHITE)));
-	colored_triangle t10(pos(left, down, back), pos(left, up, back), pos(right, up, back), color(BGR(WHITE)));
-	colored_triangle t11(pos(right, up, back), pos(right, up, front), pos(left, up, front), color(BGR(WHITE)));
-	colored_triangle t12(pos(right, up, back), pos(left, up, back), pos(left, up, front), color(BGR(WHITE)));
+	colored_sphere s1(pos3(-300.0, 0.0, 200.0), 200.0, color(BGR(RED)));
+	colored_sphere s2(pos3(0.0, -100.0, 500.0), 100.0, color(255, 128, 64));
+	colored_sphere s3(pos3(300.0, 0.0, 200.0), 200.0, color(BGR(YELLOW)));
+	colored_triangle t1(pos3(right, down, back), pos3(right, down, front), pos3(left, down, front), color(BGR(WHITE)));
+	colored_triangle t2(pos3(right, down, back), pos3(left, down, back), pos3(left, down, front), color(BGR(WHITE)));
+	colored_triangle t3(pos3(left, down, front), pos3(right, down, front), pos3(right, up, front), color(BGR(WHITE)));
+	colored_triangle t4(pos3(left, down, front), pos3(left, up, front), pos3(right, up, front), color(BGR(WHITE)));
+	colored_triangle t5(pos3(left, down, back), pos3(left, up, back), pos3(left, up, front), color(BGR(WHITE)));
+	colored_triangle t6(pos3(left, down, back), pos3(left, down, front), pos3(left, up, front), color(BGR(WHITE)));
+	colored_triangle t7(pos3(right, down, back), pos3(right, up, back), pos3(right, up, front), color(BGR(WHITE)));
+	colored_triangle t8(pos3(right, down, back), pos3(right, down, front), pos3(right, up, front), color(BGR(WHITE)));
+	colored_triangle t9(pos3(left, down, back), pos3(right, down, back), pos3(right, up, back), color(BGR(WHITE)));
+	colored_triangle t10(pos3(left, down, back), pos3(left, up, back), pos3(right, up, back), color(BGR(WHITE)));
+	colored_triangle t11(pos3(right, up, back), pos3(right, up, front), pos3(left, up, front), color(BGR(WHITE)));
+	colored_triangle t12(pos3(right, up, back), pos3(left, up, back), pos3(left, up, front), color(BGR(WHITE)));
 	surface** objectList = new surface* [objectNum];
 	objectList[0] = new colored_sphere(s1);
 	objectList[1] = new colored_sphere(s2);
@@ -107,7 +107,6 @@ scene init() {
 	objectList[12] = new colored_triangle(t10);
 	objectList[13] = new colored_triangle(t11);
 	objectList[14] = new colored_triangle(t12);
-	vector<surface> a;
 
 	return scene{ dist,e,v,u,w,lightNum,lightList,objectNum,objectList, HEIGHT, WIDTH };
 }
@@ -129,7 +128,7 @@ color RayTrace(const scene &s, const ray &l, const color &lightColor, int layer)
 	unsigned int objectNum = s.objectNum;
 	surface **objectList = s.objectList;
 	unsigned int lightNum = s.lightNum;
-	pos *lightList = s.lightList;
+	pos3 *lightList = s.lightList;
 	color ret;
 	// 初始化深度值
 	float t0 = 10000.0;
@@ -147,7 +146,7 @@ color RayTrace(const scene &s, const ray &l, const color &lightColor, int layer)
 	if (hitObject != nullptr && (typeid(*hitObject) == typeid(colored_sphere) || typeid(*hitObject) == typeid(colored_triangle))) {
 		colored_surface &ob = *dynamic_cast<colored_surface *>(hitObject);
 		color result;
-		pos p = l.e + t0 * 0.9999  * l.d;
+		pos3 p = l.e + t0 * 0.9999  * l.d;
 		vec3 n = hitObject->normal(p);
 		vec3 viewDir = (-l.d).normalize();
 		// 环境光
